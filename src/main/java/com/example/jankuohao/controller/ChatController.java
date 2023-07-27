@@ -18,9 +18,9 @@ public class ChatController {
     public ChatController(OpenAiStreamClient openAiStreamClient) {
         this.openAiStreamClient = openAiStreamClient;
     }
-    @GetMapping("/websocket")
+    @GetMapping("/miniPetChat")
     public String websocket() {
-        return "websocket.html";
+        return "miniPetChat.html";
     }
 
 }
