@@ -5,7 +5,6 @@ import cn.hutool.cache.impl.TimedCache;
 import cn.hutool.core.date.DateUnit;
 
 /**
- * 描述：定时缓存，对被缓存的对象定义一个过期时间，当对象超过过期时间会被清理。此缓存没有容量限制，对象只有在过期后才会被移除。
  *
  * @author  langshen
  * @date 2023-03-28

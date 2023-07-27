@@ -46,14 +46,8 @@ public class WebSocketServer {
 
     private static CopyOnWriteArraySet<WebSocketServer> webSocketSet = new CopyOnWriteArraySet<>();
 
-    /**
-     * 用来存放每个客户端对应的WebSocketServer对象
-     */
     private static ConcurrentHashMap<String, WebSocketServer> webSocketMap = new ConcurrentHashMap();
 
-    /**
-     * 为了保存在线用户信息，在方法中新建一个list存储一下【实际项目依据复杂度，可以存储到数据库或者缓存】
-     */
     private final static List<Session> SESSIONS = Collections.synchronizedList(new ArrayList<>());
 
 
@@ -78,9 +72,6 @@ public class WebSocketServer {
         log.info("[连接ID:{}] 建立连接, 当前连接数:{}", this.uid, getOnlineCount());
     }
 
-    /**
-     * 断开连接
-     */
     @OnClose
     public void onClose() {
         webSocketSet.remove(this);
@@ -92,7 +83,6 @@ public class WebSocketServer {
     }
 
     /**
-     * 发送错误
      * @param session
      * @param error
      */
@@ -103,7 +93,6 @@ public class WebSocketServer {
     }
 
     /**
-     * 接收到客户端消息
      * @param msg
      */
     @OnMessage
@@ -138,7 +127,6 @@ public class WebSocketServer {
 
 
     /**
-     * 获取当前连接数
      *
      * @return
      */
@@ -146,16 +134,12 @@ public class WebSocketServer {
         return onlineCount;
     }
 
-    /**
-     * 当前连接数加一
-     */
+
     public static synchronized void addOnlineCount() {
         WebSocketServer.onlineCount++;
     }
 
-    /**
-     * 当前连接数减一
-     */
+
     public static synchronized void subOnlineCount() {
         WebSocketServer.onlineCount--;
     }

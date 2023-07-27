@@ -13,7 +13,6 @@ import javax.websocket.Session;
 import java.util.Objects;
 
 /**
- * 描述：OpenAI流式输出Socket接收
  * @author langshen
  * @date 2023-03-23
  */
