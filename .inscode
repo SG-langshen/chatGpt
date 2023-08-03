@@ -1,1 +1,1 @@
-run = "javac Main.java && java Main"
+run = "javac JanKuoHaoApplication.java && java main"
