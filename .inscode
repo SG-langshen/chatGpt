@@ -1,1 +1,1 @@
-run = "javac JanKuoHaoApplication.java && java main"
+run = "mvn spring-boot:run"
