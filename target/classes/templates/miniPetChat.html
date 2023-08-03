@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MiniPet</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="js/markdown.min.js"></script>
+    <link rel="stylesheet" href="css/highlight.css">
+    <script src="js/highlight.js"></script>
+</head>
+<body>
+<div id="app">
+    <div class="mini_header">
+        <div style="width: 70%;display: flex;align-items: center;position: relative">
+            <div style="height: 50px;line-height: 50px;font-size: 30px;margin-left: 30px;color: #ffffff;font-weight: bold;position: absolute;left: 0" @click="logoShowFlag=!logoShowFlag">MiniPet</div>
+            <div style="position: absolute;right: 0;display: flex;">
+                <a href="https://www.chatpet.top" style="margin-right: 30px" target="_blank">
+                    <img src="img/github.png" style="height: 50px;width: auto;">
+                </a>
+                <a href="https://www.chatpet.top" style="margin-right: 30px" target="_blank">
+                    <img src="img/gitee.png" style="height: 50px;width: auto;">
+                </a>
+                <a href="http://www.chatpet.top" target="_blank">
+                    <img src="img/chatpet.png" style="height: 50px;width: auto;">
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="mini_body">
+        <div style="width: 50vw;height: 100vh">
+            <div class="chat_content" ref="mainscroll">
+                <div class="chat_item">
+                    <div>
+                        Pet粉丝们，大家好呀~
+                        <br>我是MiniPet,我是由上海尖括号团队研发的ChatPet的开源版本。
+                        <br>小伙伴们可以自己将MiniPet部署到自己的服务器上，也可以根据自己的需求定制化开发，打造属于您的专属Chat平台。
+                        同时，我们有专业团队维护，如果使用中有什么疑问需要咨询以及有什么问题和改进的想法想向我们反馈，欢迎联系我们，感谢您宝贵的意见，让我们的产品越来越好，越来越方便大家的生活。
+                        <br>
+                        <br>注意：MiniPet为上海尖括号团队研发的针对个人爱好者学习和使用的，禁止商用，如果未经授权而引发的一切法律问题，后果自负，同时上海尖括号团队也会追究您的法律责任。如果您有商用需求请联系我们，谢谢~
+                    </div>
+                    <div style="margin-top: 20px">
+                        <div style="display: flex">
+                            <a href="#javascript" @click="questionFlag=true">疑惑/反馈</a>
+                            <a href="#javascript" style="margin-left: 20px" @click="companyFlag=true">商务合作</a>
+                            <a href="http://www.chatpet.top" style="margin-left: 20px">了解更多</a>
+                        </div>
+                    </div>
+                </div>
+                <div v-for="(item,index) in chatList" :key="index">
+                    <div class="my_chat_item">
+                        <div>
+                            {{item.message}}
+                        </div>
+                    </div>
+                    <div class="gpt_chat_item">
+                        <div v-if="item.content">
+                            <div v-html="item.content" style="padding: 30px"></div>
+                        </div>
+                        <div v-else>
+                            <div style="padding: 30px">
+                                MiniPet正在思考中，如果我思考的时间太长，可能是我卡住了，请重新提问哦....
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="send_tools">
+                <div style="display: flex;margin-top: 30px">
+                    <div style="width: 15vw;display: flex;justify-content: space-between;">
+                        <i class="el-icon-delete icon_item" @click="deleteChat"></i>
+                        <i class="el-icon-caret-bottom icon_item" @click="scrollBottom"></i>
+                        <i class="el-icon-caret-top icon_item" @click="scrollTop"></i>
+                    </div>
+                    <div style="width: 85vw">
+                        <el-input placeholder="有什么问题快来问问MiniPet吧~" v-model="message" @keydown.enter.native="sendChat" ref="chatInput">
+                            <el-button slot="append" icon="el-icon-error" @click="stopChat" v-if="loadingFlag"></el-button>
+                            <el-button slot="append" icon="el-icon-s-promotion" @click="sendChat" v-else></el-button>
+                        </el-input>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <transition name="el-zoom-in-center">
+            <div style="position: absolute;top: 10vh;left: -10vh" v-show="logoShowFlag">
+                <img src="img/chatPetLogo.png" style="height: 20vh;width: auto">
+            </div>
+        </transition>
+
+        <transition name="el-zoom-in-center">
+            <div style="position: absolute;top: 10vh;right: -10vh" v-show="logoShowFlag">
+                <img src="img/myChatLogo.png" style="height: 20vh;width: auto">
+            </div>
+        </transition>
+
+        <el-drawer
+                :visible.sync="companyFlag"
+                direction="rtl"
+                :with-header="false"
+                :before-close="handleClose">
+            <div class="company_cooperation">
+                <div>商务合作</div>
+            </div>
+        </el-drawer>
+
+        <el-drawer
+                :visible.sync="questionFlag"
+                direction="rtl"
+                :with-header="false"
+                :before-close="handleClose">
+            <div class="question_feedback">
+                <div>疑惑/反馈</div>
+            </div>
+        </el-drawer>
+    </div>
+</div>
+</body>
+<script src="js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    let vue=new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                message:'',
+                chatList:[],
+                socket: null,
+                olduid: '',
+                loadingFlag: false,
+                tempContent:'',
+                isConnectFlag: false,
+                companyFlag:false,
+                questionFlag:false,
+                logoShowFlag:false,
+            }
+        },
+        mounted(){
+            hljs.initHighlightingOnLoad();
+            this.initChatList();
+            this.initChat();
+            this.bottomScrollClick();
+        },
+        methods:{
+            getUuid() {
+                var s = [];
+                var hexDigits = "0123456789abcdef";
+                for (var i = 0; i < 36; i++) {
+                    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+                }
+                s[14] = "4";
+                s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);
+                s[8] = s[13] = s[18] = s[23] = "-";
+
+                var uuid = s.join("");
+                return uuid;
+            },
+
+            initChatList(){
+                let chatListTemp=JSON.parse(localStorage.getItem('chatList'));
+                if(chatListTemp){
+                    this.chatList=JSON.parse(localStorage.getItem('chatList'));
+                }else{
+                    this.chatList=[];
+                    localStorage.setItem('chatList',JSON.stringify(this.chatList));
+                }
+            },
+
+            initChat(){
+                this.loadingFlag= true;
+                if (typeof WebSocket == "undefined") {
+                    console.log("您的浏览器不支持MiniPet");
+                    this.isConnectFlag=false;
+                } else {
+                    let uuid=localStorage.getItem('pid');
+                    if(!uuid){
+                        uuid=this.getUuid();
+                        localStorage.setItem('pid',uuid);
+                    }
+                    this.socket = new WebSocket('ws://localhost:8000/websocket/'+uuid);
+                    this.socket.onopen = () => {
+                        console.log('MiniPet连接成功~')
+                        this.loadingFlag =false;
+                        this.isConnectFlag=true;
+                    };
+                    this.socket.onmessage = msg => {
+                        const item = this.chatList.find(item => {
+                            return item.id === this.olduid;
+                        });
+
+                        if (msg.data === '[DONE]') {
+                            item.state = '[DONE]';
+                            this.loadingFlag = false;
+                            if(uuid){
+                                localStorage.setItem('chatList',JSON.stringify(this.chatList));
+                            }
+                            this.tempContent='';
+                            this.bottomScrollClick();
+                            this.$nextTick(() => {
+                                this.$refs.chatInput.focus();
+                            })
+                            return;
+                        }
+
+                        const json_data = JSON.parse(msg.data);
+                        if (!json_data.content) {
+                            return;
+                        }
+
+                        this.tempContent += json_data.content;
+                        item.content=marked(this.tempContent);
+                        this.bottomScrollClick();
+                    };
+                    this.socket.onclose = () => {
+                        console.log("MiniPet已关闭");
+                        this.isConnectFlag=false;
+                    };
+                    this.socket.onerror = () => {
+                        alert("节点连接失败，请刷新页面重试！")
+                    };
+                    window.unload = () => {
+                        this.isConnectFlag=false;
+                        this.socket.close();
+                        this.socket = null;
+                    };
+                }
+            },
+
+            sendChat(){
+                if (!this.isConnectFlag) {
+                    this.initChat();
+                }
+                if (!this.message) {
+                    return;
+                }
+                this.tempContent='';
+                const item = {
+                    id: this.getUuid(),
+                    message: this.message,
+                    content: '',
+                    state: '',
+                };
+                this.olduid = item.id;
+                this.chatList.push(item);
+                this.socket.send(this.message);
+                this.message = '';
+                this.loadingFlag = true;
+                this.bottomScrollClick();
+            },
+
+            stopChat(){
+                if (this.chatList) {
+                    this.chatList[this.chatList.length - 1].state='[DONE]';
+                }
+                this.socket.close();
+                this.socket = null;
+                this.loadingFlag=false;
+            },
+
+            deleteChat(){
+                this.chatList=[];
+                localStorage.setItem('chatList',this.chatList);
+            },
+
+            scrollBottom(){
+                this.$nextTick(() => {
+                    this.$refs.mainscroll.scrollTop = this.$refs.mainscroll.scrollTop>=this.$refs.mainscroll.scrollHeight?this.$refs.mainscroll.scrollHeight:this.$refs.mainscroll.scrollTop+1000;
+                })
+            },
+
+            scrollTop(){
+                this.$nextTick(() => {
+                    this.$refs.mainscroll.scrollTop = this.$refs.mainscroll.scrollTop<=0?0:this.$refs.mainscroll.scrollTop-1000;
+                })
+            },
+
+            bottomScrollClick() {
+                this.$nextTick(() => {
+                    this.$refs.mainscroll.scrollTop = this.$refs.mainscroll.scrollHeight;
+                })
+            },
+        }
+    })
+</script>
+<style>
+    ::-webkit-scrollbar {
+        display: none;
+    }
+
+    #app{
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    *{
+        margin: 0;
+        padding: 0;
+    }
+
+    .mini_header{
+        width: 100vw;
+        height: 8vh;
+        background-color: #0d1117;
+        display: flex;
+        justify-content: center;
+    }
+
+    .mini_body{
+        width: 100vw;
+        height: 92vh;
+        display: flex;
+        justify-content: center;
+        position: relative;
+    }
+
+    .chat_content{
+        height: 80vh;
+        width: 100%;
+        overflow: auto;
+        scroll-behavior:smooth;
+    }
+
+    .send_tools{
+        height: 20vh;
+    }
+
+    .chat_item{
+        width: 100%;
+        border: none;
+        background-color: #a5d6ff;
+        border-radius: 0 15px 15px 15px;
+        margin-top: 30px;
+        font-family: 微软雅黑;
+        box-sizing: border-box;
+        padding: 30px;
+        overflow: hidden;
+        word-wrap: break-word;
+        word-break: break-all;
+        letter-spacing: 0.5px;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .gpt_chat_item{
+        width: 100%;
+        border: none;
+        background-color: #a5d6ff;
+        border-radius: 0 15px 15px 15px;
+        margin-top: 30px;
+        font-family: 微软雅黑;
+        box-sizing: border-box;
+        overflow: hidden;
+        word-wrap: break-word;
+        word-break: break-all;
+        letter-spacing: 0.5px;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .my_chat_item{
+        width: 100%;
+        background-color: #1f6feb;
+        border-radius: 0 15px 15px 15px;
+        color: #ffffff;
+        margin-top: 30px;
+        font-family: 微软雅黑;
+        box-sizing: border-box;
+        padding: 30px;
+        letter-spacing: 0.5px;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .icon_item{
+        font-size: 30px;
+        flex: 50vw;
+        color: #8b949e;
+    }
+
+    .icon_item:hover{
+        color: #0d1117;
+    }
+
+    .company_cooperation{
+        width: 100%;
+        background-color: #1f6feb;
+        color: #ffffff;
+        font-family: 微软雅黑;
+        box-sizing: border-box;
+        padding: 30px;
+        letter-spacing: 0.5px;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .question_feedback{
+        width: 100%;
+        background-color: #d2a8ff;
+        color: #ffffff;
+        font-family: 微软雅黑;
+        box-sizing: border-box;
+        padding: 30px;
+        letter-spacing: 0.5px;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+</style>
+</html>
